@@ -1,0 +1,4 @@
+py_ecc
+pycryptodome
+web3
+py-solc-x
