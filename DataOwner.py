@@ -3,15 +3,17 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 from Crypto.Random import get_random_bytes
 from kzg_core import KZG
+from EdgeNode import EdgeNode
 
 # Constants
 BLOCK_SIZE = 32 # bytes (for conversion to scalar field)
 AES_KEY_SIZE = 32 # 256 bits
 
 class DataOwner:
-    def __init__(self, secret_key=None):
+    def __init__(self, secret_key=None, edge_node=None):
         self.aes_key = secret_key if secret_key else get_random_bytes(AES_KEY_SIZE)
         self.kzg = KZG(degree=1024) # Support up to 1024 chunks for demo
+        self.edge_node = edge_node if edge_node else EdgeNode(self.kzg)
 
     def encrypt_file(self, content: bytes):
         """
@@ -60,7 +62,8 @@ class DataOwner:
         # 3. Build Verkle Tree (Committing to the polynomial of chunks)
         # For this prototype, we treat the file as ONE polynomial (Depth 1 Verkle Tree)
         # Root = Commit([c_0, c_1, ...])
-        root_commitment = self.kzg.commit(chunks)
+        # Offload to Edge Node!
+        root_commitment = self.edge_node.generate_tags_and_root(chunks)
         
         return {
             "root": root_commitment,

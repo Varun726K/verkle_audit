@@ -96,8 +96,8 @@ class CloudProvider:
             z = idx # In this schema, the "index" IS the random challenge point z.
             proof, y = self.kzg.generate_proof(chunks, z)
             
-            # Normalize proof to (x,y)
-            proof = normalize(proof)
+            # Proof is already normalized by kzg.commit inside generate_proof
+            # proof = normalize(proof) <--- REMOVE THIS
             
             proofs.append({
                 "z": z,

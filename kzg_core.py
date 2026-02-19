@@ -130,11 +130,14 @@ class KZG:
         """
         Verify the proof equation:
         e(proof, [s - z]_2) = e(C - [y]_1, [1]_2)
-        
-        Rearranged for simpler computation usually:
-        e(proof, S_2 - z*G2) = e(C - y*G1, G2)
         """
-        
+        # Convert Affine (x, y) to Jacobian (x, y, 1) if necessary
+        # optimized_bn128 expects (x, y, z) for arithmetic operations like add/pairing
+        if commitment and len(commitment) == 2:
+            commitment = (commitment[0], commitment[1], G1[2])
+        if proof and len(proof) == 2:
+            proof = (proof[0], proof[1], G1[2])
+
         # LHS terms
         # [s]_2 is SRS_2[1]
         # [z]_2 is z * G2

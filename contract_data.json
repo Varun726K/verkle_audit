@@ -1,0 +1,258 @@
+{
+    "address": "0x5b35fe27457C413b52237586ADD1Ae2443D6E898",
+    "abi": [
+        {
+            "inputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "_g2_gen_x1",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_g2_gen_x2",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_g2_gen_y1",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_g2_gen_y2",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_g2_alpha_x1",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_g2_alpha_x2",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_g2_alpha_y1",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_g2_alpha_y2",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "constructor"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": true,
+                    "internalType": "bytes32",
+                    "name": "fileId",
+                    "type": "bytes32"
+                },
+                {
+                    "indexed": false,
+                    "internalType": "bool",
+                    "name": "success",
+                    "type": "bool"
+                }
+            ],
+            "name": "AuditResult",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": true,
+                    "internalType": "bytes32",
+                    "name": "fileId",
+                    "type": "bytes32"
+                },
+                {
+                    "indexed": false,
+                    "internalType": "bytes32",
+                    "name": "challengeHash",
+                    "type": "bytes32"
+                },
+                {
+                    "indexed": false,
+                    "internalType": "uint256[]",
+                    "name": "indices",
+                    "type": "uint256[]"
+                }
+            ],
+            "name": "ChallengeGenerated",
+            "type": "event"
+        },
+        {
+            "inputs": [],
+            "name": "G2_Alpha",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "x1",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "x2",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "y1",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "y2",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "G2_Gen",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "x1",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "x2",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "y1",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "y2",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "bytes32",
+                    "name": "",
+                    "type": "bytes32"
+                }
+            ],
+            "name": "files",
+            "outputs": [
+                {
+                    "internalType": "address",
+                    "name": "owner",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "root_x",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "root_y",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "fileSize",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "bool",
+                    "name": "exists",
+                    "type": "bool"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "bytes32",
+                    "name": "fileId",
+                    "type": "bytes32"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "root_x",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "root_y",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "fileSize",
+                    "type": "uint256"
+                }
+            ],
+            "name": "uploadMetadata",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "bytes32",
+                    "name": "fileId",
+                    "type": "bytes32"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "proof_x",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "proof_y",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "z",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "y",
+                    "type": "uint256"
+                }
+            ],
+            "name": "verifyProof",
+            "outputs": [
+                {
+                    "internalType": "bool",
+                    "name": "",
+                    "type": "bool"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        }
+    ],
+    "srs_secret": 8490130935872660646744673724125653442411581538872812694923292943296681825970
+}
