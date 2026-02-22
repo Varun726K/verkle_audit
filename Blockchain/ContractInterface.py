@@ -1,8 +1,8 @@
 import json
 from web3 import Web3
-from kzg_core import KZG
+from Initializer.kzg_core import KZG
 # Import the EdgeNode because the Verifier logic (pairings) is needed for simulation
-from EdgeNode import EdgeNode 
+from EdgeNode.EdgeNode import EdgeNode
 
 class ContractInterface:
     def __init__(self, node_url="http://127.0.0.1:8545", check_connection=True):
@@ -18,7 +18,7 @@ class ContractInterface:
             
             # Load Deployed Contract Data
             try:
-                with open("contract_data.json", "r") as f:
+                with open("Blockchain/contract_data.json") as f:
                     data = json.load(f)
                     self.contract_address = data["address"]
                     self.abi = data["abi"]

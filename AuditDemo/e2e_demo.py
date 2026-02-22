@@ -1,9 +1,11 @@
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 import time
-from DataOwner import DataOwner
-from CloudProvider import CloudProvider
-from EdgeNode import EdgeNode
-from ContractInterface import ContractInterface
-from kzg_core import KZG
+from DataOwner.DataOwner import DataOwner
+from CloudProvider.CloudProvider import CloudProvider
+from EdgeNode.EdgeNode import EdgeNode
+from Blockchain.ContractInterface import ContractInterface
+from Initializer.kzg_core import KZG
 
 def run_demo():
     print("\n" + "="*60)

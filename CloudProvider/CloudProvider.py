@@ -1,5 +1,5 @@
 import os
-from kzg_core import KZG
+from Initializer.kzg_core import KZG
 from py_ecc.optimized_bn128 import normalize
 
 class CloudProvider:

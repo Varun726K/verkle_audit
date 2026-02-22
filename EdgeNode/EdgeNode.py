@@ -1,4 +1,4 @@
-from kzg_core import KZG
+from Initializer.kzg_core import KZG
 
 class EdgeNode:
     def __init__(self, kzg_instance=None):

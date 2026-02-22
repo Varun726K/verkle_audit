@@ -2,8 +2,8 @@ import os
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 from Crypto.Random import get_random_bytes
-from kzg_core import KZG
-from EdgeNode import EdgeNode
+from Initializer.kzg_core import KZG
+from EdgeNode.EdgeNode import EdgeNode
 
 # Constants
 BLOCK_SIZE = 32 # bytes (for conversion to scalar field)

@@ -26,7 +26,7 @@ def deploy_contract():
     solc_version = '0.8.0'
     install_solc(solc_version)
 
-    with open("Auditor.sol", "r") as f:
+    with open(os.path.join("Blockchain", "Auditor.sol"), "r") as f:
         contract_source = f.read()
 
     compiled_sol = compile_standard(
@@ -118,7 +118,7 @@ def deploy_contract():
         "srs_secret": kzg.s # Save secret so client can match SRS
     }
     
-    with open("contract_data.json", "w") as f:
+    with open(os.path.join("Blockchain", "contract_data.json"), "w") as f:
         json.dump(deployment_data, f, indent=4)
     print("💾 Saved contract address, ABI, and SRS secret to 'contract_data.json'")
 
