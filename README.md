@@ -2,12 +2,12 @@
 
 This project implements a decentralized auditing scheme for cloud storage using **Verkle Trees** (KZG Commitments) and **Ethereum Smart Contracts**. It allows a Data Owner to outsource encrypted files to a Cloud Provider and verify their integrity efficiently ($O(1)$ proof size) without a trusted third party.
 
-##  Prerequisites
+## Prerequisites
 
 *   **Python 3.8+**
 *   **Node.js & npm** (for Ganache)
 
-##  Installation
+## Installation
 
 1.  **Clone / Navigate to the directory**:
     ```bash
@@ -24,7 +24,7 @@ This project implements a decentralized auditing scheme for cloud storage using 
     npm install -g ganache
     ```
 
-##  Running the Demo (Local Blockchain)
+## Running the Demo (Local Blockchain)
 
 For the full experience with a real local blockchain state:
 
@@ -38,7 +38,7 @@ ganache
 ### Step 2: Deploy the Smart Contract
 Open a **new** terminal and run:
 ```bash
-python deploy.py
+python -m Initializer.deploy
 ```
 This script will:
 *   Compile `Auditor.sol`.
@@ -49,10 +49,10 @@ This script will:
 ### Step 3: Run the End-to-End Demo
 In the same terminal, run:
 ```bash
-python e2e_demo.py
+python -m AuditDemo.e2e_demo
 ```
 
-##  What's Happening?
+## What's Happening?
 
 1.  **Initialization**: The system loads the Trusted Setup and connects to the deployed Smart Contract.
 2.  **Data Outsourcing**:
@@ -66,12 +66,14 @@ python e2e_demo.py
     *   The **Smart Contract** verifies the proof on-chain using pairing cryptography.
     *   **Result**: The script reports `SUCCESS` if the data is intact.
 
-##  Project Structure
+## Project Structure
 
-*   `Auditor.sol`: Solidity smart contract for on-chain verification.
-*   `kzg_core.py`: Python implementation of KZG commitments and pairing checks.
-*   `DataOwner.py`: Client-side encryption and tree root generation.
-*   `CloudProvider.py`: Server-side storage and proof generation.
-*   `ContractInterface.py`: Bridge between Python and Ethereum (Web3.py).
-*   `deploy.py`: Deployment script.
-*   `e2e_demo.py`: Main demonstration script.
+*   `Blockchain/Auditor.sol`: Solidity smart contract for on-chain verification.
+*   `Blockchain/ContractInterface.py`: Bridge between Python and Ethereum (Web3.py).
+*   `Initializer/kzg_core.py`: Python implementation of KZG commitments and pairing checks.
+*   `Initializer/deploy.py`: Deployment script.
+*   `DataOwner/DataOwner.py`: Client-side encryption and tree root generation.
+*   `CloudProvider/CloudProvider.py`: Server-side storage and proof generation.
+*   `EdgeNode/EdgeNode.py`: Node handling heavy cryptography logic like Verkle Tree root tag generation.
+*   `AuditDemo/e2e_demo.py`: Main demonstration script.
+*   `AuditDemo/SystemTest.py`: Testing script for the full system flow.
