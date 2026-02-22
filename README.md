@@ -2,12 +2,12 @@
 
 This project implements a decentralized auditing scheme for cloud storage using **Verkle Trees** (KZG Commitments) and **Ethereum Smart Contracts**. It allows a Data Owner to outsource encrypted files to a Cloud Provider and verify their integrity efficiently ($O(1)$ proof size) without a trusted third party.
 
-## 📋 Prerequisites
+##  Prerequisites
 
 *   **Python 3.8+**
 *   **Node.js & npm** (for Ganache)
 
-## 🛠️ Installation
+##  Installation
 
 1.  **Clone / Navigate to the directory**:
     ```bash
@@ -24,7 +24,7 @@ This project implements a decentralized auditing scheme for cloud storage using 
     npm install -g ganache
     ```
 
-## 🚀 Running the Demo (Local Blockchain)
+##  Running the Demo (Local Blockchain)
 
 For the full experience with a real local blockchain state:
 
@@ -52,7 +52,7 @@ In the same terminal, run:
 python e2e_demo.py
 ```
 
-## 📜 What's Happening?
+##  What's Happening?
 
 1.  **Initialization**: The system loads the Trusted Setup and connects to the deployed Smart Contract.
 2.  **Data Outsourcing**:
@@ -66,7 +66,7 @@ python e2e_demo.py
     *   The **Smart Contract** verifies the proof on-chain using pairing cryptography.
     *   **Result**: The script reports `SUCCESS` if the data is intact.
 
-## 📂 Project Structure
+##  Project Structure
 
 *   `Auditor.sol`: Solidity smart contract for on-chain verification.
 *   `kzg_core.py`: Python implementation of KZG commitments and pairing checks.
