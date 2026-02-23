@@ -1,5 +1,5 @@
 {
-    "address": "0xbb5A18c35b31AfE0B5139A90c04eF6a3d9D8BdfA",
+    "address": "0x5029548C390Cf5D54B74a93B1da217E129894aa6",
     "abi": [
         {
             "inputs": [
@@ -89,6 +89,32 @@
                 }
             ],
             "name": "ChallengeGenerated",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": false,
+                    "internalType": "uint256[]",
+                    "name": "data",
+                    "type": "uint256[]"
+                }
+            ],
+            "name": "DebugPairingFailed",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": false,
+                    "internalType": "uint256[]",
+                    "name": "payload",
+                    "type": "uint256[]"
+                }
+            ],
+            "name": "PrecompilePayload",
             "type": "event"
         },
         {
@@ -254,5 +280,5 @@
             "type": "function"
         }
     ],
-    "srs_secret": 14512852614899625594469063717855906601309723561046004057796075201994953097526
+    "srs_secret": 3854110941650975954105683158218587477554817070419847881538055899790539032820
 }

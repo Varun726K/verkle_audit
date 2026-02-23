@@ -4,22 +4,34 @@ from py_ecc.optimized_bn128 import normalize
 
 class CloudProvider:
     def __init__(self, degree=1024):
-        pass
+        self.storage = {}
 
     def load_kzg(self, kzg_instance):
         self.kzg = kzg_instance
 
     def store_file(self, file_id, chunks):
-        """Stores the encrypted file chunks"""
-        self.storage = {file_id: chunks}
-        print(f"[CSP] Stored {len(chunks)} blocks for file {file_id}")
+        """Stores the encrypted file chunks to disk for demo modification"""
+        import json
+        filename = "Stored_chunks.json"
+        
+        # Save to disk as strings
+        with open(filename, "w") as f:
+            json.dump([str(c) for c in chunks], f, indent=4)
+            
+        self.storage[file_id] = filename
+        print(f"[CSP] Stored {len(chunks)} blocks to local disk as '{filename}'")
 
     def respond_to_challenge(self, file_id, challenge_indices):
-        """Generates a KZG Proof for the requested indices"""
+        """Generates a KZG Proof for the requested indices reading from disk"""
         if file_id not in self.storage:
             return None
         
-        chunks = self.storage[file_id]
+        filename = self.storage[file_id]
+        import json
+        with open(filename, "r") as f:
+            # Read from disk, converting back to ints
+            chunks = [int(c) for c in json.load(f)]
+            
         proofs = []
         
         for idx in challenge_indices:

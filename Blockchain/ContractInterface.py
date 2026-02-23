@@ -72,11 +72,23 @@ class ContractInterface:
              if len(file_id) < 32:
                 file_id = file_id.ljust(32, b'\0')
 
+             print(f"\n[DEBUG Python -> Solidity]")
+             print(f"File ID: {file_id.hex()}")
+             print(f"Proof X: {proof_x}")
+             print(f"Proof Y: {proof_y}")
+             print(f"Index z: {challenge_index}")
+             print(f"Value y: {y}")
+
              try:
-                 result = self.contract.functions.verifyProof(file_id, proof_x, proof_y, challenge_index, y).call()
-                 return result
+                 tx_hash = self.contract.functions.verifyProof(file_id, proof_x, proof_y, challenge_index, y).transact({'gas': 3000000})
+                 receipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
+                 if receipt.status == 1:
+                     return True
+                 else:
+                     print(f"[Blockchain] Transaction Reverted on-chain (Receipt Status: 0)")
+                     return False
              except Exception as e:
-                 print(f"[Blockchain] Verification Error: {e}")
+                 print(f"[Blockchain] Verification RPC Error: {e}")
                  return False
         else:
             return self.mock_chain.verify_proof(file_id, challenge_index, y, proof)

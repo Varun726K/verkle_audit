@@ -33,8 +33,10 @@ def run_demo():
     if contract.mode == "BLOCKCHAIN" and not contract.contract:
          pass 
     
-    contract_addr = contract.contract.address if contract.contract else contract.deploy()
+    contract_addr = contract.deploy()
     print(f"(*) Contract Deployed/Simulated at: {contract_addr}")
+    
+    input("\n Contract initialized! Press Enter to proceed to Phase 2 (Data Outsourcing)...")
     
     print("\n>>> [Phase 2: Data Outsourcing]")
     demo_file = "demo_secret.txt"
@@ -47,7 +49,8 @@ def run_demo():
     upload_pkg = do.prepare_upload(demo_file)
     root = upload_pkg["root"]
     chunks = upload_pkg["chunks"]
-    file_id = b"DOC_001"
+    import random
+    file_id = f"DOC_{random.randint(1000, 9999)}".encode('utf-8')
     
     print(f"(*) Data Owner: Generated Verkle Root: {root}")
     print(f"(*) Data Owner: Uploading Metadata to Blockchain...")
@@ -58,6 +61,8 @@ def run_demo():
     csp.load_kzg(edge_node.kzg) 
     csp.store_file(file_id, chunks)
     
+    input("\n Data Owner upload complete! Press Enter to proceed to Phase 3 (Integrity Challenge)...")
+
     indices = contract.get_challenge(file_id)
     print(f"(*) Blockchain: Issued Challenge For Indices: {indices}")
 
@@ -66,7 +71,13 @@ def run_demo():
     print("(*) Cloud Provider: Generating KZG Proofs...")
     proofs = csp.respond_to_challenge(file_id, indices)
     
-    print("(*) Cloud Provider: Submitting Proofs to Blockchain...")
+    tamper_cmd = input("\n Press Enter to verify normally, or type 'TAMPER' to corrupt a proof: ").strip().upper()
+    if tamper_cmd == 'TAMPER':
+        print("\n[!!!] MALICIOUS ACTOR TAMPERING WITH PROOF [!!!]")
+        print(f"    -> Corrupting polynomial evaluation for chunk {proofs[0]['z']}...")
+        proofs[0]['y'] = proofs[0]['y'] + 1
+    
+    print("\n(*) Cloud Provider: Submitting Proofs to Blockchain...")
     
     all_passed = True
     for p in proofs:
@@ -90,9 +101,6 @@ def run_demo():
         print("      DEMO RESULT: FAILED (Tampering Detected)")
     print("="*60 + "\n")
     
-    if os.path.exists(demo_file):
-        os.remove(demo_file)
-
 if __name__ == "__main__":
     try:
         run_demo()

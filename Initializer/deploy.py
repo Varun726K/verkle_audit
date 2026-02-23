@@ -83,4 +83,11 @@ if __name__ == "__main__":
     try:
         deploy_contract()
     except Exception as e:
-        print(f"Deployment Failed: {e}")
+        if hasattr(e, 'stdout_data'):
+            print(f"Deployment Failed with Solc Error:\n{e.stdout_data}")
+            if hasattr(e, 'stderr_data'):
+                print(f"Stderr:\n{e.stderr_data}")
+        else:
+            import traceback
+            traceback.print_exc()
+            print(f"Deployment Failed: {e}")
