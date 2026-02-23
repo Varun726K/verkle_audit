@@ -14,7 +14,6 @@ class CloudProvider:
         import json
         filename = "Stored_chunks.json"
         
-        # Save to disk as strings
         with open(filename, "w") as f:
             json.dump([str(c) for c in chunks], f, indent=4)
             
@@ -29,7 +28,6 @@ class CloudProvider:
         filename = self.storage[file_id]
         import json
         with open(filename, "r") as f:
-            # Read from disk, converting back to ints
             chunks = [int(c) for c in json.load(f)]
             
         proofs = []
