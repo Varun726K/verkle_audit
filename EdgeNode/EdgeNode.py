@@ -1,32 +1,14 @@
 from Initializer.kzg_core import KZG
+from Initializer.verkle_tree import VerkleTree
 
 class EdgeNode:
-    def __init__(self, kzg_instance=None):
-        """
-        In a real scenario, Edge Node is a powerful server.
-        It has the public parameters (SRS).
-        """
-        if kzg_instance:
-            self.kzg = kzg_instance
-        else:
-            self.kzg = KZG(degree=1024)
+    def __init__(self, kzg_instance=None, width=16):
+        self.kzg = kzg_instance if kzg_instance else KZG(degree=1024)
+        self.vt = VerkleTree(self.kzg, width=width)
 
     def generate_tags_and_root(self, chunks):
-        """
-        Receives blinded/encrypted blocks from Data Owner.
-        Computes the Vector Commitment (Verkle Root).
-        """
         print("[Edge Node] Received chunks. Computing Verkle Root...")
-        root = self.kzg.commit(chunks)
-        
-        return root
+        return self.vt.build_tree(chunks)
 
     def initiate_audit(self, file_id, challenge_indices):
-        """
-        The Edge Node can also act as the 'Auditor' or trigger the Smart Contract.
-        This method constructs the Challenge.
-        """
-        return {
-            "file_id": file_id,
-            "indices": challenge_indices
-        }
+        return {"file_id": file_id, "indices": challenge_indices}

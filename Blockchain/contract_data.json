@@ -1,5 +1,5 @@
 {
-    "address": "0x5029548C390Cf5D54B74a93B1da217E129894aa6",
+    "address": "0x68d236338eE90F98F51305Eabbee0b7516C29dBF",
     "abi": [
         {
             "inputs": [
@@ -248,24 +248,34 @@
                     "type": "bytes32"
                 },
                 {
-                    "internalType": "uint256",
+                    "internalType": "uint256[]",
                     "name": "proof_x",
-                    "type": "uint256"
+                    "type": "uint256[]"
                 },
                 {
-                    "internalType": "uint256",
+                    "internalType": "uint256[]",
                     "name": "proof_y",
-                    "type": "uint256"
+                    "type": "uint256[]"
                 },
                 {
-                    "internalType": "uint256",
+                    "internalType": "uint256[]",
                     "name": "z",
-                    "type": "uint256"
+                    "type": "uint256[]"
                 },
                 {
-                    "internalType": "uint256",
+                    "internalType": "uint256[]",
                     "name": "y",
-                    "type": "uint256"
+                    "type": "uint256[]"
+                },
+                {
+                    "internalType": "uint256[]",
+                    "name": "commitment_x",
+                    "type": "uint256[]"
+                },
+                {
+                    "internalType": "uint256[]",
+                    "name": "commitment_y",
+                    "type": "uint256[]"
                 }
             ],
             "name": "verifyProof",
@@ -280,5 +290,5 @@
             "type": "function"
         }
     ],
-    "srs_secret": 3854110941650975954105683158218587477554817070419847881538055899790539032820
+    "srs_secret": 21519404416518897754937489063552218546832764023433500502963026528478387154659
 }

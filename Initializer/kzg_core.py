@@ -3,6 +3,32 @@ from py_ecc.optimized_bn128 import G1, G2, multiply, add, curve_order, pairing, 
 
 Order = curve_order
 
+def mod_inverse(a, m):
+    if a == 0:
+        raise ZeroDivisionError("division by zero")
+    return pow(a, m - 2, m)
+
+def lagrange_interpolate(x_values, y_values):
+    assert len(x_values) == len(y_values)
+    n = len(x_values)
+    poly = [0] * n
+    for i in range(n):
+        num = [1]
+        den = 1
+        for j in range(n):
+            if i != j:
+                new_num = [0] * (len(num) + 1)
+                for k in range(len(num)):
+                    new_num[k+1] = (new_num[k+1] + num[k]) % Order
+                    new_num[k] = (new_num[k] - x_values[j] * num[k]) % Order
+                num = new_num
+                den = (den * (x_values[i] - x_values[j])) % Order
+        inv_den = mod_inverse(den, Order)
+        factor = (y_values[i] * inv_den) % Order
+        for k in range(len(num)):
+            poly[k] = (poly[k] + num[k] * factor) % Order
+    return poly
+
 class KZG:
     def __init__(self, secret=None, degree=16):
         """Generates Trusted Setup (SRS)"""
