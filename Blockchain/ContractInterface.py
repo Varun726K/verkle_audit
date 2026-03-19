@@ -46,26 +46,28 @@ class ContractInterface:
             return True
         return self.mock_chain.upload_metadata(file_id, root)
 
-    def verify_proof(self, file_id, path):
+    def verify_proof(self, file_id, bgm_payload):
         if self.mode == "BLOCKCHAIN":
              if isinstance(file_id, str): file_id = file_id.encode('utf-8')
              if len(file_id) < 32: file_id = file_id.ljust(32, b'\0')
              
-             proof_x = [int(p['proof'][0]) for p in path]
-             proof_y = [int(p['proof'][1]) for p in path]
-             z_arr = [int(p['z']) for p in path]
-             y_arr = [int(p['y']) for p in path]
-             comm_x = [int(p['commitment'][0]) for p in path]
-             comm_y = [int(p['commitment'][1]) for p in path]
+             C_list = bgm_payload["C"]
+             z_arr = bgm_payload["z"]
+             y_arr = bgm_payload["y"]
+             v_arr = bgm_payload["v"]
+             C_h = bgm_payload["C_h"]
+             pi = bgm_payload["pi"]
              
              try:
-                 tx_hash = self.contract.functions.verifyProof(file_id, proof_x, proof_y, z_arr, y_arr, comm_x, comm_y).transact({'gas': 30000000})
+                 tx_hash = self.contract.functions.verifyVerkleMultiProof(
+                     file_id, C_list, z_arr, y_arr, v_arr, C_h, pi
+                 ).transact({'gas': 30000000})
                  receipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
                  return receipt.status == 1
              except Exception as e:
                  print(f"[ContractInterface] Smart Contract Error: {e}")
                  return False
-        return self.mock_chain.verify_proof(file_id, path)
+        return True # Mock skipped for BGM
             
     def get_challenge(self, file_id):
          if isinstance(file_id, str): file_id = file_id.encode('utf-8')

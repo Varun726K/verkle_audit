@@ -29,6 +29,102 @@ def lagrange_interpolate(x_values, y_values):
             poly[k] = (poly[k] + num[k] * factor) % Order
     return poly
 
+import hashlib
+
+def poly_add(p1, p2):
+    max_len = max(len(p1), len(p2))
+    res = [0] * max_len
+    for i in range(len(p1)): res[i] = (res[i] + p1[i]) % Order
+    for i in range(len(p2)): res[i] = (res[i] + p2[i]) % Order
+    return res
+
+def poly_mul_scalar(p, scalar):
+    return [(coeff * scalar) % Order for coeff in p]
+
+def poly_div_exact(P, z, y):
+    """ Divides (P(x) - y) / (x - z). Assumes remainder is 0. """
+    num = list(P)
+    num[0] = (num[0] - y) % Order
+    quotient = [0] * (len(num) - 1)
+    for i in range(len(num) - 1, 0, -1):
+        quotient[i-1] = num[i]
+        num[i-1] = (num[i-1] + quotient[i-1] * z) % Order
+    return quotient
+
+def evaluate_poly(P, x):
+    result = 0
+    power = 1
+    for coeff in P:
+        result = (result + coeff * power) % Order
+        power = (power * x) % Order
+    return result
+
+def hash_to_scalar(*args):
+    """ Mirrors abi.encode() hashing in Solidity """
+    data = b""
+    for arg in args:
+        if isinstance(arg, int): 
+            data += arg.to_bytes(32, 'big')
+        elif isinstance(arg, tuple): 
+            val0 = int(arg[0])
+            val1 = int(arg[1])
+            data += val0.to_bytes(32, 'big') + val1.to_bytes(32, 'big')
+    return int.from_bytes(hashlib.sha256(data).digest(), 'big') % Order
+
+from py_ecc.optimized_bn128 import normalize
+
+def generate_multiproof(kzg, polynomials, C, z, y):
+    depth = len(polynomials)
+    
+    # 1. Challenge r
+    r = hash_to_scalar(*C, *z, *y)
+    
+    # 2. Compute h(x) = SUM [ r^i * (f_i(x) - y_i) / (x - z_i) ]
+    h_coeffs = []
+    r_power = 1
+    for i in range(depth):
+        Q_i = poly_div_exact(polynomials[i], z[i], y[i])
+        term = poly_mul_scalar(Q_i, r_power)
+        h_coeffs = poly_add(h_coeffs, term)
+        r_power = (r_power * r) % Order
+        
+    C_h = kzg.commit(h_coeffs)
+    
+    # 3. Challenge t
+    t = hash_to_scalar(r, C_h)
+    
+    # 4. Prover evaluations at t
+    v = [evaluate_poly(polynomials[i], t) for i in range(depth)]
+    v_h = evaluate_poly(h_coeffs, t)
+    
+    # 5. Challenge rho
+    rho = hash_to_scalar(t, *v, v_h)
+    
+    # 6. Compute P_agg(x) and V_agg
+    P_agg = []
+    V_agg = 0
+    rho_power = 1
+    for i in range(depth):
+        P_agg = poly_add(P_agg, poly_mul_scalar(polynomials[i], rho_power))
+        V_agg = (V_agg + v[i] * rho_power) % Order
+        rho_power = (rho_power * rho) % Order
+        
+    P_agg = poly_add(P_agg, poly_mul_scalar(h_coeffs, rho_power))
+    V_agg = (V_agg + v_h * rho_power) % Order
+    
+    # 7. Compute final quotient Q(x) = (P_agg(x) - V_agg) / (x - t)
+    Q_final = poly_div_exact(P_agg, t, V_agg)
+    pi = kzg.commit(Q_final)
+    
+    return {
+        "C": [(int(c[0]), int(c[1])) for c in C],
+        "z": z,
+        "y": y,
+        "v": v,
+        "C_h": (int(C_h[0]), int(C_h[1])),
+        "pi": (int(pi[0]), int(pi[1]))
+    }
+
 class KZG:
     def __init__(self, secret=None, degree=16):
         """Generates Trusted Setup (SRS)"""

@@ -39,7 +39,7 @@ class CloudProvider:
             
         paths = []
         for idx in challenge_indices:
-            path = self.vt.prove_path(tree_levels, idx)
+            path = self.vt.prove_bgm_path(tree_levels, idx)
             paths.append(path)
             
         return paths

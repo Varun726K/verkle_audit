@@ -1,5 +1,5 @@
 {
-    "address": "0x68d236338eE90F98F51305Eabbee0b7516C29dBF",
+    "address": "0x7389A70d2d5616Bd856dc8f389c69caa13efC65a",
     "abi": [
         {
             "inputs": [
@@ -248,14 +248,9 @@
                     "type": "bytes32"
                 },
                 {
-                    "internalType": "uint256[]",
-                    "name": "proof_x",
-                    "type": "uint256[]"
-                },
-                {
-                    "internalType": "uint256[]",
-                    "name": "proof_y",
-                    "type": "uint256[]"
+                    "internalType": "uint256[2][]",
+                    "name": "C",
+                    "type": "uint256[2][]"
                 },
                 {
                     "internalType": "uint256[]",
@@ -269,16 +264,21 @@
                 },
                 {
                     "internalType": "uint256[]",
-                    "name": "commitment_x",
+                    "name": "v",
                     "type": "uint256[]"
                 },
                 {
-                    "internalType": "uint256[]",
-                    "name": "commitment_y",
-                    "type": "uint256[]"
+                    "internalType": "uint256[2]",
+                    "name": "C_h",
+                    "type": "uint256[2]"
+                },
+                {
+                    "internalType": "uint256[2]",
+                    "name": "pi",
+                    "type": "uint256[2]"
                 }
             ],
-            "name": "verifyProof",
+            "name": "verifyVerkleMultiProof",
             "outputs": [
                 {
                     "internalType": "bool",
@@ -290,5 +290,5 @@
             "type": "function"
         }
     ],
-    "srs_secret": 21519404416518897754937489063552218546832764023433500502963026528478387154659
+    "srs_secret": 21781176529268387765911982034700640814648510763273361189012916006010939148315
 }

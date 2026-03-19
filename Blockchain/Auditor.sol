@@ -7,6 +7,8 @@ contract Auditor {
     event DebugPairingFailed(uint256[] data);
     event PrecompilePayload(uint256[] payload);
 
+    uint256 constant ORDER = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
+
     struct FileInfo {
         address owner;
         uint256 root_x;
@@ -35,50 +37,117 @@ contract Auditor {
         files[fileId] = FileInfo(msg.sender, root_x, root_y, fileSize, true);
     }
 
-    function verifyProof(
-        bytes32 fileId, 
-        uint256[] memory proof_x, 
-        uint256[] memory proof_y, 
-        uint256[] memory z, 
-        uint256[] memory y,
-        uint256[] memory commitment_x,
-        uint256[] memory commitment_y
+    function computeVh(
+        uint256[] calldata z,
+        uint256[] calldata y,
+        uint256[] calldata v,
+        uint256 t,
+        uint256 r
+    ) internal view returns (uint256 v_h) {
+        uint256 r_power = 1;
+        uint256 depth = z.length;
+        for (uint i = 0; i < depth; i++) {
+            uint256 num = addmod(v[i], ORDER - (y[i] % ORDER), ORDER);
+            uint256 den = addmod(t, ORDER - (z[i] % ORDER), ORDER);
+            uint256 invDen = modExp(den, ORDER - 2, ORDER);
+            uint256 term = mulmod(num, invDen, ORDER);
+            v_h = addmod(v_h, mulmod(term, r_power, ORDER), ORDER);
+            r_power = mulmod(r_power, r, ORDER);
+        }
+    }
+
+    function computeAggregates(
+        uint256[2][] calldata C,
+        uint256[] calldata v,
+        uint256 rho,
+        uint256[2] calldata C_h,
+        uint256 v_h
+    ) internal returns (uint256[3] memory aggs) {
+        uint256 rho_power = 1;
+        uint256 depth = C.length;
+        for (uint i = 0; i < depth; i++) {
+            (uint256 tempX, uint256 tempY) = g1Mul(C[i][0], C[i][1], rho_power);
+            (aggs[0], aggs[1]) = g1Add(aggs[0], aggs[1], tempX, tempY);
+            aggs[2] = addmod(aggs[2], mulmod(v[i], rho_power, ORDER), ORDER);
+            rho_power = mulmod(rho_power, rho, ORDER);
+        }
+        (uint256 hX, uint256 hY) = g1Mul(C_h[0], C_h[1], rho_power);
+        (aggs[0], aggs[1]) = g1Add(aggs[0], aggs[1], hX, hY);
+        aggs[2] = addmod(aggs[2], mulmod(v_h, rho_power, ORDER), ORDER);
+    }
+
+    function computeRHS(
+        uint256 aggC_X,
+        uint256 aggC_Y,
+        uint256 aggV,
+        uint256[2] calldata pi,
+        uint256 t
+    ) internal returns (uint256 rhsX, uint256 rhsY) {
+        (uint256 vg1X, uint256 vg1Y) = g1Mul(1, 2, aggV); // V_agg * G1
+        (uint256 nvg1X, uint256 nvg1Y) = g1Neg(vg1X, vg1Y); // -V_agg * G1
+        (uint256 cx, uint256 cy) = g1Add(aggC_X, aggC_Y, nvg1X, nvg1Y); // C_agg - V_agg*G1
+        (uint256 tPiX, uint256 tPiY) = g1Mul(pi[0], pi[1], t); // t * pi
+        return g1Add(cx, cy, tPiX, tPiY); // Final RHS
+    }
+
+    function checkPairing(
+        uint256 rhsX,
+        uint256 rhsY,
+        uint256[2] calldata pi
+    ) internal returns (bool) {
+        uint256[12] memory input;
+        input[0] = pi[0];
+        input[1] = pi[1];
+        input[2] = G2_Alpha.x2;
+        input[3] = G2_Alpha.x1;
+        input[4] = G2_Alpha.y2;
+        input[5] = G2_Alpha.y1;
+        
+        (uint256 negRhsX, uint256 negRhsY) = g1Neg(rhsX, rhsY);
+        input[6] = negRhsX;
+        input[7] = negRhsY;
+        input[8] = G2_Gen.x2;
+        input[9] = G2_Gen.x1;
+        input[10] = G2_Gen.y2;
+        input[11] = G2_Gen.y1;
+
+        return ecPairing(input);
+    }
+
+    function verifyVerkleMultiProof(
+        bytes32 fileId,
+        uint256[2][] calldata C,
+        uint256[] calldata z,
+        uint256[] calldata y,
+        uint256[] calldata v,
+        uint256[2] calldata C_h,
+        uint256[2] calldata pi
     ) external returns (bool) {
         require(files[fileId].exists, "File does not exist");
-        uint256 depth = proof_x.length;
-        require(depth > 0, "Empty path");
+        
+        // Final commitment must be the root
+        require(C[C.length - 1][0] == files[fileId].root_x && C[C.length - 1][1] == files[fileId].root_y, "Root mismatch");
 
-        for(uint i=0; i<depth; i++) {
-            if (i == depth - 1) {
-                require(commitment_x[i] == files[fileId].root_x && commitment_y[i] == files[fileId].root_y, "Root mismatch");
-            }
-            if (i > 0) {
-                // compute expected hash locally using standard sha256
-                uint256 expectedHash = uint256(sha256(abi.encodePacked(commitment_x[i-1], commitment_y[i-1]))) % 21888242871839275222246405745257275088548364400416034343698204186575808495617;
-                require(y[i] == expectedHash, "Hash link broken");
-            }
+        uint256[4] memory chals; // [r, t, v_h, rho]
+        
+        // 1. Fiat-Shamir Challenges
+        chals[0] = uint256(sha256(abi.encode(C, z, y))) % ORDER;
+        chals[1] = uint256(sha256(abi.encode(chals[0], C_h))) % ORDER; // t
+        
+        // 2. Calculate v_h 
+        chals[2] = computeVh(z, y, v, chals[1], chals[0]); // v_h
+        
+        // 3. Challenge rho
+        chals[3] = uint256(sha256(abi.encode(chals[1], v, chals[2]))) % ORDER; // rho
 
-            uint256[12] memory input;
-            input[0] = proof_x[i];
-            input[1] = proof_y[i];
-            input[2] = G2_Alpha.x2;
-            input[3] = G2_Alpha.x1;
-            input[4] = G2_Alpha.y2;
-            input[5] = G2_Alpha.y1;
-            {
-                (uint256 tx, uint256 ty) = g1Mul(1, 2, y[i]);
-                (uint256 cx, uint256 cy) = g1Neg(commitment_x[i], commitment_y[i]);
-                (tx, ty) = g1Add(tx, ty, cx, cy);
-                (cx, cy) = g1Mul(proof_x[i], proof_y[i], z[i]);
-                (cx, cy) = g1Neg(cx, cy);
-                (input[6], input[7]) = g1Add(tx, ty, cx, cy);
-            }
-            input[8] = G2_Gen.x2;
-            input[9] = G2_Gen.x1;
-            input[10] = G2_Gen.y2;
-            input[11] = G2_Gen.y1;
-            require(ecPairing(input), "KZG path verification failed");
-        }
+        // 4. Aggregate variables
+        uint256[3] memory aggs = computeAggregates(C, v, chals[3], C_h, chals[2]);
+
+        // 5. Final Pairing Prep (RHS = C_agg - V_agg*G1 + t*pi)
+        (uint256 rhsX, uint256 rhsY) = computeRHS(aggs[0], aggs[1], aggs[2], pi, chals[1]);
+
+        // 6. The O(1) Pairing Check
+        require(checkPairing(rhsX, rhsY, pi), "Multiproof verification failed");
         
         emit AuditResult(fileId, true);
         return true;
@@ -115,5 +184,16 @@ contract Auditor {
         uint256 p = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
         if (y == 0) return (x, y);
         return (x, p - y);
+    }
+
+    function modExp(uint256 base, uint256 exp, uint256 mod) internal view returns (uint256) {
+        uint256[6] memory input;
+        input[0] = 32; input[1] = 32; input[2] = 32;
+        input[3] = base; input[4] = exp; input[5] = mod;
+        uint256[1] memory out;
+        bool success;
+        assembly { success := staticcall(sub(gas(), 2000), 5, input, 192, out, 32) }
+        require(success, "modExp failed");
+        return out[0];
     }
 }

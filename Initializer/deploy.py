@@ -29,6 +29,10 @@ def deploy_contract():
             "language": "Solidity",
             "sources": {"Auditor.sol": {"content": contract_source}},
             "settings": {
+                "optimizer": {
+                    "enabled": True,
+                    "runs": 200
+                },
                 "outputSelection": {
                     "*": {
                         "*": ["abi", "metadata", "evm.bytecode", "evm.sourceMap"]
@@ -86,9 +90,11 @@ if __name__ == "__main__":
         deploy_contract()
     except Exception as e:
         if hasattr(e, 'stdout_data'):
-            print(f"Deployment Failed with Solc Error:\n{e.stdout_data}")
-            if hasattr(e, 'stderr_data'):
-                print(f"Stderr:\n{e.stderr_data}")
+            try:
+                err_dict = json.loads(e.stdout_data)
+                print(f"\nSOLC ERROR:\n{err_dict['errors'][0]['formattedMessage']}")
+            except:
+                print(f"Deployment Failed with Solc Error:\n{e.stdout_data}")
         else:
             import traceback
             traceback.print_exc()
