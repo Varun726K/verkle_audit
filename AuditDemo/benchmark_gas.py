@@ -91,7 +91,7 @@ def run_benchmark():
             tx = Auditor.functions.verifyVerkleMultiProof(
                 file_id_v.ljust(32, b'\0'),
                 path["C"], path["z"], path["y"], path["v"],
-                path["C_h"], path["pi"],
+                path["v_h"], path["C_h"], path["pi"],
                 len(path["C"])  # depth = total entries for single path
             ).transact({'from': account, 'gas': 30000000})
             receipt = w3.eth.wait_for_transaction_receipt(tx)
