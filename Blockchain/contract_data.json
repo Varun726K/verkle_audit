@@ -1,5 +1,5 @@
 {
-    "address": "0x7389A70d2d5616Bd856dc8f389c69caa13efC65a",
+    "address": "0xd005454f08fFd231252E601cEDd04F4B1F9362BD",
     "abi": [
         {
             "inputs": [
@@ -248,6 +248,40 @@
                     "type": "bytes32"
                 },
                 {
+                    "internalType": "bytes32[]",
+                    "name": "siblings",
+                    "type": "bytes32[]"
+                },
+                {
+                    "internalType": "bool[]",
+                    "name": "flags",
+                    "type": "bool[]"
+                },
+                {
+                    "internalType": "bytes32",
+                    "name": "leaf",
+                    "type": "bytes32"
+                }
+            ],
+            "name": "verifyMerkleProof",
+            "outputs": [
+                {
+                    "internalType": "bool",
+                    "name": "",
+                    "type": "bool"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "bytes32",
+                    "name": "fileId",
+                    "type": "bytes32"
+                },
+                {
                     "internalType": "uint256[2][]",
                     "name": "C",
                     "type": "uint256[2][]"
@@ -268,6 +302,11 @@
                     "type": "uint256[]"
                 },
                 {
+                    "internalType": "uint256",
+                    "name": "v_h",
+                    "type": "uint256"
+                },
+                {
                     "internalType": "uint256[2]",
                     "name": "C_h",
                     "type": "uint256[2]"
@@ -276,6 +315,11 @@
                     "internalType": "uint256[2]",
                     "name": "pi",
                     "type": "uint256[2]"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "depth",
+                    "type": "uint256"
                 }
             ],
             "name": "verifyVerkleMultiProof",
@@ -290,5 +334,5 @@
             "type": "function"
         }
     ],
-    "srs_secret": 21781176529268387765911982034700640814648510763273361189012916006010939148315
+    "srs_secret": 5594083965224690730102762678385832884995133564853588023785392683933695296474
 }

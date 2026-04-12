@@ -55,12 +55,14 @@ class ContractInterface:
              z_arr = bgm_payload["z"]
              y_arr = bgm_payload["y"]
              v_arr = bgm_payload["v"]
+             v_h   = bgm_payload["v_h"]
              C_h = bgm_payload["C_h"]
              pi = bgm_payload["pi"]
+             depth = bgm_payload.get("depth", len(C_list))
              
              try:
                  tx_hash = self.contract.functions.verifyVerkleMultiProof(
-                     file_id, C_list, z_arr, y_arr, v_arr, C_h, pi
+                     file_id, C_list, z_arr, y_arr, v_arr, v_h, C_h, pi, depth
                  ).transact({'gas': 30000000})
                  receipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
                  return receipt.status == 1

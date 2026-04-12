@@ -118,6 +118,41 @@ class VerkleTree:
             
         return generate_multiproof(self.kzg, polynomials, C_list, z_list, y_list)
 
+    def prove_bgm_batch(self, tree_levels, global_indices):
+        from Initializer.kzg_core import generate_multiproof
+        
+        all_polys = []
+        all_C = []
+        all_z = []
+        all_y = []
+        depth = len(tree_levels) - 1 if len(tree_levels) > 1 else 1
+        
+        for global_index in global_indices:
+            curr_idx = global_index
+            for level in range(depth):
+                layer_scalars = tree_levels[level]
+                block_idx = curr_idx // self.width
+                z = curr_idx % self.width
+                start = block_idx * self.width
+                block = layer_scalars[start:start+self.width]
+                
+                x_vals = list(range(len(block)))
+                poly = lagrange_interpolate(x_vals, block)
+                y = block[z]
+                C = self.kzg.commit(poly)
+                
+                all_polys.append(poly)
+                all_C.append(C)
+                all_z.append(z)
+                all_y.append(y)
+                
+                curr_idx = block_idx
+        
+        result = generate_multiproof(self.kzg, all_polys, all_C, all_z, all_y)
+        result["depth"] = depth
+        result["num_challenges"] = len(global_indices)
+        return result
+
     def verify_path(self, path, root_commitment):
         depth = len(path)
         for i in range(depth):

@@ -121,6 +121,7 @@ def generate_multiproof(kzg, polynomials, C, z, y):
         "z": z,
         "y": y,
         "v": v,
+        "v_h": v_h,
         "C_h": (int(C_h[0]), int(C_h[1])),
         "pi": (int(pi[0]), int(pi[1]))
     }

@@ -18,7 +18,7 @@ def deploy_contract():
     print(f"   Using Account: {web3.eth.default_account}")
 
     print("Compiling Auditor.sol...")
-    solc_version = '0.8.0'
+    solc_version = '0.8.20'
     install_solc(solc_version)
 
     with open(os.path.join("Blockchain", "Auditor.sol"), "r") as f:
@@ -33,6 +33,7 @@ def deploy_contract():
                     "enabled": True,
                     "runs": 200
                 },
+                "viaIR": True,
                 "outputSelection": {
                     "*": {
                         "*": ["abi", "metadata", "evm.bytecode", "evm.sourceMap"]

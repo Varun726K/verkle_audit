@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 contract Auditor {
     event ChallengeGenerated(bytes32 indexed fileId, bytes32 challengeHash, uint256[] indices);
@@ -35,25 +35,6 @@ contract Auditor {
     function uploadMetadata(bytes32 fileId, uint256 root_x, uint256 root_y, uint256 fileSize) external {
         require(!files[fileId].exists, "File ID already exists");
         files[fileId] = FileInfo(msg.sender, root_x, root_y, fileSize, true);
-    }
-
-    function computeVh(
-        uint256[] calldata z,
-        uint256[] calldata y,
-        uint256[] calldata v,
-        uint256 t,
-        uint256 r
-    ) internal view returns (uint256 v_h) {
-        uint256 r_power = 1;
-        uint256 depth = z.length;
-        for (uint i = 0; i < depth; i++) {
-            uint256 num = addmod(v[i], ORDER - (y[i] % ORDER), ORDER);
-            uint256 den = addmod(t, ORDER - (z[i] % ORDER), ORDER);
-            uint256 invDen = modExp(den, ORDER - 2, ORDER);
-            uint256 term = mulmod(num, invDen, ORDER);
-            v_h = addmod(v_h, mulmod(term, r_power, ORDER), ORDER);
-            r_power = mulmod(r_power, r, ORDER);
-        }
     }
 
     function computeAggregates(
@@ -113,6 +94,63 @@ contract Auditor {
 
         return ecPairing(input);
     }
+    function validateRoots(
+        bytes32 fileId,
+        uint256[2][] calldata C,
+        uint256 depth
+    ) internal view {
+        for (uint i = depth - 1; i < C.length; i += depth) {
+            require(C[i][0] == files[fileId].root_x && C[i][1] == files[fileId].root_y, "Root mismatch");
+        }
+    }
+
+    // Computes [r, t, rho] challenges matching Python hash_to_scalar flat-bytes encoding
+    function _computeChallenges(
+        uint256[2][] calldata C,
+        uint256[] calldata z,
+        uint256[] calldata y,
+        uint256[] calldata v,
+        uint256 v_h,
+        uint256[2] calldata C_h
+    ) internal pure returns (uint256[3] memory chals) {
+        // r = sha256(C[0].x || C[0].y || ... || z[0] || ... || y[0] || ...)
+        bytes memory buf;
+        for (uint i = 0; i < C.length; i++) {
+            buf = abi.encodePacked(buf, C[i][0], C[i][1]);
+        }
+        for (uint i = 0; i < z.length; i++) {
+            buf = abi.encodePacked(buf, z[i]);
+        }
+        for (uint i = 0; i < y.length; i++) {
+            buf = abi.encodePacked(buf, y[i]);
+        }
+        chals[0] = uint256(sha256(buf)) % ORDER;
+
+        // t = sha256(r || C_h.x || C_h.y)
+        chals[1] = uint256(sha256(abi.encodePacked(chals[0], C_h[0], C_h[1]))) % ORDER;
+
+        // rho = sha256(t || v[0] || ... || v_h)
+        bytes memory rhoBuf = abi.encodePacked(chals[1]);
+        for (uint i = 0; i < v.length; i++) {
+            rhoBuf = abi.encodePacked(rhoBuf, v[i]);
+        }
+        rhoBuf = abi.encodePacked(rhoBuf, v_h);
+        chals[2] = uint256(sha256(rhoBuf)) % ORDER;
+    }
+
+    function _doVerify(
+        uint256[2][] calldata C,
+        uint256[] calldata v,
+        uint256 rho,
+        uint256 v_h,
+        uint256[2] calldata C_h,
+        uint256[2] calldata pi,
+        uint256 t
+    ) internal returns (bool) {
+        uint256[3] memory aggs = computeAggregates(C, v, rho, C_h, v_h);
+        (uint256 rhsX, uint256 rhsY) = computeRHS(aggs[0], aggs[1], aggs[2], pi, t);
+        return checkPairing(rhsX, rhsY, pi);
+    }
 
     function verifyVerkleMultiProof(
         bytes32 fileId,
@@ -120,38 +158,18 @@ contract Auditor {
         uint256[] calldata z,
         uint256[] calldata y,
         uint256[] calldata v,
+        uint256 v_h,
         uint256[2] calldata C_h,
-        uint256[2] calldata pi
+        uint256[2] calldata pi,
+        uint256 depth
     ) external returns (bool) {
         require(files[fileId].exists, "File does not exist");
-        
-        // Final commitment must be the root
-        require(C[C.length - 1][0] == files[fileId].root_x && C[C.length - 1][1] == files[fileId].root_y, "Root mismatch");
-
-        uint256[4] memory chals; // [r, t, v_h, rho]
-        
-        // 1. Fiat-Shamir Challenges
-        chals[0] = uint256(sha256(abi.encode(C, z, y))) % ORDER;
-        chals[1] = uint256(sha256(abi.encode(chals[0], C_h))) % ORDER; // t
-        
-        // 2. Calculate v_h 
-        chals[2] = computeVh(z, y, v, chals[1], chals[0]); // v_h
-        
-        // 3. Challenge rho
-        chals[3] = uint256(sha256(abi.encode(chals[1], v, chals[2]))) % ORDER; // rho
-
-        // 4. Aggregate variables
-        uint256[3] memory aggs = computeAggregates(C, v, chals[3], C_h, chals[2]);
-
-        // 5. Final Pairing Prep (RHS = C_agg - V_agg*G1 + t*pi)
-        (uint256 rhsX, uint256 rhsY) = computeRHS(aggs[0], aggs[1], aggs[2], pi, chals[1]);
-
-        // 6. The O(1) Pairing Check
-        require(checkPairing(rhsX, rhsY, pi), "Multiproof verification failed");
-        
-        emit AuditResult(fileId, true);
+        validateRoots(fileId, C, depth);
+        uint256[3] memory chals = _computeChallenges(C, z, y, v, v_h, C_h);
+        require(_doVerify(C, v, chals[2], v_h, C_h, pi, chals[1]), "Multiproof verification failed");
         return true;
     }
+
 
     function ecPairing(uint256[12] memory input) internal returns (bool) {
         uint256[1] memory out;
@@ -195,5 +213,26 @@ contract Auditor {
         assembly { success := staticcall(sub(gas(), 2000), 5, input, 192, out, 32) }
         require(success, "modExp failed");
         return out[0];
+    }
+
+    function verifyMerkleProof(
+        bytes32 fileId,
+        bytes32[] calldata siblings,
+        bool[] calldata flags,
+        bytes32 leaf
+    ) external returns (bool) {
+        require(files[fileId].exists, "File does not exist");
+        bytes32 currentHash = leaf;
+        
+        for (uint i = 0; i < siblings.length; i++) {
+            if (flags[i]) {
+                currentHash = sha256(abi.encodePacked(currentHash, siblings[i]));
+            } else {
+                currentHash = sha256(abi.encodePacked(siblings[i], currentHash));
+            }
+        }
+        
+        require(uint256(currentHash) == files[fileId].root_x, "Merkle Root mismatch");
+        return true;
     }
 }
